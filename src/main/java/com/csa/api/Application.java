@@ -2,9 +2,11 @@ package com.csa.api;
 
 import com.csa.api.domain.quiz.QuizQuestion;
 import com.csa.api.repository.DatabaseService;
-import com.csa.api.ultil.JsonUtil;
+import com.csa.api.util.JsonUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.result.DeleteResult;
 import io.javalin.Javalin;
 import org.bson.Document;
 
@@ -66,7 +68,72 @@ public class Application {
             }
 
         });
+        app.put("/question", ctx -> {
+
+            try {
+                String json = ctx.body();
+                //System.out.println("json = " + json);
+
+                ObjectMapper objectMapper = new ObjectMapper();
+                QuizQuestion quizQuestion = objectMapper.readValue(json, QuizQuestion.class);
+
+                String finalJson = JsonUtil.convertToJson(quizQuestion);
+
+                final Document document = Document.parse(finalJson);
+                MongoCollection<Document> collection = databaseService.getDb().getCollection("posts");
+                if (collection != null) {
+                    databaseService.getDb().getCollection("posts").replaceOne(
+                            Filters.eq("id", quizQuestion.getId().toString()),
+                            document);
+                }
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+
+                String errorMsg = "Exception occurred";
+                String response = "{ \"error\" : \"" + errorMsg  + "\"}";
+                ctx.json(response);
+            }
+
+
+            String msg = "Successful";
+            String response = "{ \"status\" : \"" + msg  + "\"}";
+            ctx.json(response);
+
+        });
+
+        app.delete("/question/{id}", ctx -> {
+            String id = ctx.pathParam("id");
+
+            String response = "";
+            try {
+                MongoCollection<Document> collection = databaseService.getDb().getCollection("posts");
+                if (collection != null) {
+                    DeleteResult result = databaseService.getDb().getCollection("posts").deleteOne(Filters.eq("id", id));
+                    if (result == null || result.getDeletedCount() == 0) {
+                        String errorMsg = "Exception occurred";
+                        response = "{ \"error\" : \"" + errorMsg  + "\"}";
+                        ctx.json(response);
+                    }
+                }
+                else {
+                    String errorMsg = "data not found";
+                    response = "{ \"error\" : \"" + errorMsg  + "\"}";
+                    ctx.json(response);
+                }
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+
+                String errorMsg = "Exception occurred";
+                response = "{ \"error\" : \"" + errorMsg  + "\"}";
+                ctx.json(response);
+            }
+
+            String msg = "Deleted";
+            response = "{ \"status\" : \"" + msg  + "\"}";
+            ctx.json(response);
+        });
 
     }
 }
-

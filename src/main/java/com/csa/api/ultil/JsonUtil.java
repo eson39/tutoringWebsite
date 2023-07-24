@@ -1,4 +1,4 @@
-package com.csa.api.ultil;
+package com.csa.api.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
