@@ -1,6 +1,6 @@
 package com.csa.api.domain.quiz;
 
-public class AnswerChoices{
+public class AnswerChoice {
     private String key;
     private String value;
 

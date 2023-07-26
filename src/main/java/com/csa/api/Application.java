@@ -46,6 +46,8 @@ public class Application {
         });
 
         app.post("/posts/question", ctx -> {
+            String msg = "Successful";
+            String response = "{ \"status\" : \"" + msg  + "\"}";
 
             try {
                 String bodyJson = ctx.body();
@@ -54,7 +56,7 @@ public class Application {
                 quizQuestion.setId(UUID.randomUUID());
                 System.out.println("quizQuestion = "+ quizQuestion.toString());
                 String finalJson = JsonUtil.convertToJson(quizQuestion);
-                final Document document = Document.parse(bodyJson);
+                final Document document = Document.parse(finalJson);
                 MongoCollection<Document> posts = databaseService.getDb().getCollection("posts");
                 if (posts == null) {
                     databaseService.getDb().createCollection("posts");
@@ -65,9 +67,15 @@ public class Application {
             }
             catch (Exception e) {
                 e.printStackTrace();
+                String errorMsg = "Exception occurred";
+                response = "{ \"error\" : \"" + errorMsg  + "\"}";
+                ctx.status(400);
             }
 
+
+            ctx.json(response);
         });
+
         app.put("/question", ctx -> {
 
             try {

@@ -1,13 +1,13 @@
 package com.csa.api.domain.quiz;
 
 public class QuestionCode {
-    private QuestionCode questionCode;
+    private String code;
 
-    public QuestionCode getQuestionCode() {
-        return questionCode;
+    public String getCode() {
+        return code;
     }
 
-    public void setQuestionCode(QuestionCode questionCode) {
-        this.questionCode = questionCode;
+    public void setCode(String code) {
+        this.code = code;
     }
 }
