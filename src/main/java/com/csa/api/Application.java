@@ -6,13 +6,19 @@ import com.csa.api.util.JsonUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Projections;
 import com.mongodb.client.result.DeleteResult;
 import io.javalin.Javalin;
 import org.bson.Document;
+import org.bson.conversions.Bson;
+
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import static com.mongodb.client.model.Filters.eq;
+
+
 
 public class Application {
 
@@ -36,6 +42,46 @@ public class Application {
                 if (posts != null) {
                     Document doc = posts.find().first();
                     response = doc.toJson();
+                }
+                else {
+                    String errorMsg = "data not found";
+                    response = "{ \"error\" : \"" + errorMsg  + "\"}";
+                }
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+
+                String errorMsg = "Exception occurred";
+                response = "{ \"error\" : \"" + errorMsg  + "\"}";
+            }
+
+            ctx.json(response);
+        });
+
+        app.get("/question/{id}", ctx -> {
+            String id = ctx.pathParam("id");
+
+            String value = ctx.queryParam("age");
+            //System.out.println("-------- value = " + value);
+
+            String response = "";
+            try {
+                MongoCollection<Document> collection = databaseService.getDb().getCollection("posts");
+
+                Bson projectionFields = Projections.fields(Projections.excludeId());
+
+                Document document = collection.find(eq("id", id))
+                        .projection(projectionFields)
+                        .first();
+
+                if (document != null) {
+                    String json = document.toJson();
+
+                    // any rules that needs to run we want to conver to java objects from json String
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    QuizQuestion quizQuestion = objectMapper.readValue(json, QuizQuestion.class);
+
+                    response = objectMapper.writeValueAsString(quizQuestion);
                 }
                 else {
                     String errorMsg = "data not found";
