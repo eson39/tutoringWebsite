@@ -19,8 +19,18 @@ public class Application {
     public static void main(String[] args) {
         DatabaseService databaseService = new DatabaseService();
 
-        var app = Javalin.create(/*config*/)
+        var app = Javalin.create(config -> {
+                    config.plugins.enableCors(cors -> {
+                        cors.add(it -> {
+                            it.allowHost("http://127.0.0.1:5500");
+                            //it.anyHost();
+                            //it.allowHost("GET", "POST", "PUT", "DELETE");
+                        });
+                    });
+                })
                 .start(8080);
+        //.get("/", ctx -> ctx.result(JsonUtil.convertToJson(mockCreateStudents())));
+
 
         app.get("/posts/question", ctx -> {
             String response = "";
