@@ -5,26 +5,17 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.UUID;
 
 public class Feedback {
-    private UUID id;
     private String correctAnswer;
     private String explanation;
 
     public Feedback() {
     }
 
-    public Feedback(UUID id, String correctAnswer, String explanation) {
-        this.id = id;
+    public Feedback( String correctAnswer, String explanation) {
         this.correctAnswer = correctAnswer;
         this.explanation = explanation;
     }
 
-    public UUID getId() {
-        return id;
-    }
-
-    public void setId(UUID id) {
-        this.id = id;
-    }
 
     @JsonProperty("correct_answer")
     public String getCorrectAnswer() {
@@ -46,7 +37,6 @@ public class Feedback {
     @Override
     public String toString() {
         return "Feedback{" +
-                "id=" + id +
                 ", correctAnswer='" + correctAnswer + '\'' +
                 ", explanation='" + explanation + '\'' +
                 '}';

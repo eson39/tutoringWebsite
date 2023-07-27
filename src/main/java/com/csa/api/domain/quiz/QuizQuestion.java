@@ -26,7 +26,7 @@ public class QuizQuestion {
         this.answerChoiceList = answerChoiceList;
         this.feedbackList = feedbackList;
     }
-
+    @JsonProperty("id")
     public UUID getId() {
         return id;
     }

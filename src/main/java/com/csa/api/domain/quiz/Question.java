@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.UUID;
 
 public class Question {
-    private UUID id;
     private String questionHeader;
     private String questionMain;
     private QuestionCode questionCode;
@@ -13,20 +12,12 @@ public class Question {
     public Question() {
     }
 
-    public Question(UUID id, String questionHeader, String questionMain, QuestionCode questionCode) {
-        this.id = id;
+    public Question(String questionHeader, String questionMain, QuestionCode questionCode) {
         this.questionHeader = questionHeader;
         this.questionMain = questionMain;
         this.questionCode = questionCode;
     }
 
-    public UUID getId() {
-        return id;
-    }
-
-    public void setId(UUID id) {
-        this.id = id;
-    }
 
     @JsonProperty("question_header")
     public String getQuestionHeader() {
@@ -58,7 +49,6 @@ public class Question {
     @Override
     public String toString() {
         return "Question{" +
-                "id=" + id +
                 ", questionHeader='" + questionHeader + '\'' +
                 ", questionMain='" + questionMain + '\'' +
                 ", questionCode=" + questionCode +
