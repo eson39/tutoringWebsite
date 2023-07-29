@@ -6,6 +6,8 @@ import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+
 public class DatabaseService {
 
     private MongoClient mongoClient;
@@ -30,6 +32,11 @@ public class DatabaseService {
                 .version(ServerApiVersion.V1)
                 .build();
         MongoClientSettings settings = MongoClientSettings.builder()
+                .applyToSocketSettings(builder -> {
+                    builder.connectTimeout(6, MILLISECONDS);
+                    builder.readTimeout(6, MILLISECONDS);
+                })
+                .applyToClusterSettings( builder -> builder.serverSelectionTimeout(6, MILLISECONDS))
                 .applyConnectionString(new ConnectionString(connectionStringUri))
                 .serverApi(serverApi)
                 .build();
