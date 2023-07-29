@@ -57,7 +57,7 @@ public class Application {
 
             ctx.json(response);
         });
-
+/*
         app.get("/question/{id}", ctx -> {
             String id = ctx.pathParam("id");
 
@@ -97,6 +97,8 @@ public class Application {
 
             ctx.json(response);
         });
+
+ */
 
         app.post("/posts/question", ctx -> {
             String msg = "Successful";
