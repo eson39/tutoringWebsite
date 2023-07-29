@@ -32,25 +32,35 @@ public class DatabaseService {
                 .version(ServerApiVersion.V1)
                 .build();
         MongoClientSettings settings = MongoClientSettings.builder()
-                .applyToSocketSettings(builder -> {
-                    builder.connectTimeout(6, MILLISECONDS);
-                    builder.readTimeout(6, MILLISECONDS);
-                })
-                .applyToClusterSettings( builder -> builder.serverSelectionTimeout(6, MILLISECONDS))
+//                .applyToSocketSettings(builder -> {
+//                    builder.connectTimeout(6, MILLISECONDS);
+//                    builder.readTimeout(6, MILLISECONDS);
+//                })
+//                .applyToClusterSettings( builder -> builder.serverSelectionTimeout(6, MILLISECONDS))
                 .applyConnectionString(new ConnectionString(connectionStringUri))
                 .serverApi(serverApi)
                 .build();
         // Create a new client and connect to the server
         try {
+            System.out.println("------------------ 1");
             mongoClient = MongoClients.create(settings);
+            System.out.println("------------------ 2");
             // Send a ping to confirm a successful connection
             db = mongoClient.getDatabase(databaseName);
+            System.out.println("------------------ 3");
             db.runCommand(new Document("ping", 1));
+            System.out.println("------------------ 4");
 
-            String status = "Pinged your deployment. You successfully connected to MongoDB!";
+
+            String status = "--------------Pinged your deployment. You successfully connected to MongoDB!";
             System.out.println("status = " + status);
         } catch (MongoException e) {
             e.printStackTrace();
+        }
+        finally {
+            if (mongoClient != null) {
+                mongoClient.close();
+            }
         }
     }
 }
