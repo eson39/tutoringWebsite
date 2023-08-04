@@ -28,7 +28,8 @@ public class Application {
         var app = Javalin.create(config -> {
                     config.plugins.enableCors(cors -> {
                         cors.add(it -> {
-                            it.allowHost("http://127.0.0.1:5500");
+//                          it.allowHost("http://127.0.0.1:5500");
+                            it.anyHost();
                         });
                     });
                 })
