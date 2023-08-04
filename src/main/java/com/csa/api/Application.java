@@ -5,6 +5,7 @@ import com.csa.api.repository.DatabaseService;
 import com.csa.api.util.JsonUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Projections;
 import com.mongodb.client.result.DeleteResult;
@@ -13,9 +14,8 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+
 import static com.mongodb.client.model.Filters.eq;
 
 
@@ -28,37 +28,57 @@ public class Application {
         var app = Javalin.create(config -> {
                     config.plugins.enableCors(cors -> {
                         cors.add(it -> {
-         //                   it.allowHost("http://127.0.0.1:5500");
-                            it.anyHost();
+                            it.allowHost("http://127.0.0.1:5500");
                         });
                     });
                 })
                 .start(8080);
 
 
-        app.get("/posts/question", ctx -> {
+        app.get("/question", ctx -> {
             String response = "";
+            ObjectMapper objectMapper = new ObjectMapper();
+            String errorMsg = "";
             try {
-                MongoCollection<Document> posts = databaseService.getDb().getCollection("posts");
-                if (posts != null) {
-                    Document doc = posts.find().first();
-                    response = doc.toJson();
+                MongoCollection<Document> collection = databaseService.getDb().getCollection("posts");
+                if (collection != null) {
+//                    Document doc = posts.find().first();
+//                    response = doc.toJson();
+
+                    Bson projectionFields = Projections.fields(Projections.excludeId());
+
+                    List<QuizQuestion> documentsList = new ArrayList<>();
+                    MongoCursor<Document> iterator = collection
+                            .find()
+                            .projection(projectionFields)
+                            .iterator();
+
+                    while (iterator.hasNext()) {
+                        Document currentDocument = iterator.next();
+                        String currentJson = currentDocument.toJson();
+
+                        QuizQuestion quizQuestion = objectMapper.readValue(currentJson, QuizQuestion.class);
+                        documentsList.add(quizQuestion);
+                    }
+
+                    response = objectMapper.writeValueAsString(documentsList);
                 }
                 else {
-                    String errorMsg = "data not found";
+                    errorMsg = "data not found";
                     response = "{ \"error\" : \"" + errorMsg  + "\"}";
                 }
             }
             catch (Exception e) {
                 e.printStackTrace();
 
-                String errorMsg = "Exception occurred";
+                errorMsg = "Exception occurred";
                 response = "{ \"error\" : \"" + errorMsg  + "\"}";
             }
 
             ctx.json(response);
         });
-/*
+
+
         app.get("/question/{id}", ctx -> {
             String id = ctx.pathParam("id");
 
@@ -99,9 +119,7 @@ public class Application {
             ctx.json(response);
         });
 
- */
-
-        app.post("/posts/question", ctx -> {
+        app.post("/question", ctx -> {
             String msg = "Successful";
             String response = "{ \"status\" : \"" + msg + "\"}";
 

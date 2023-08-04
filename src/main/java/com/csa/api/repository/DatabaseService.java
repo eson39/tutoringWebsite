@@ -24,7 +24,7 @@ public class DatabaseService {
 
     private void initializeDB() {
         String user = "csa-api-user";
-        String password = "test123";
+        String password = "test1234";
         String databaseName = "csa-api-db";
         String connectionStringUri = "mongodb+srv://" + user + ":" + password + "@cluster0.fpb9ni4.mongodb.net/?retryWrites=true&w=majority";
 
@@ -42,14 +42,14 @@ public class DatabaseService {
                 .build();
         // Create a new client and connect to the server
         try {
-            System.out.println("------------------ 1");
+            //System.out.println("------------------ 1");
             mongoClient = MongoClients.create(settings);
-            System.out.println("------------------ 2");
+            //System.out.println("------------------ 2");
             // Send a ping to confirm a successful connection
             db = mongoClient.getDatabase(databaseName);
-            System.out.println("------------------ 3");
+            //System.out.println("------------------ 3");
             db.runCommand(new Document("ping", 1));
-            System.out.println("------------------ 4");
+            //System.out.println("------------------ 4");
 
 
             String status = "--------------Pinged your deployment. You successfully connected to MongoDB!";
@@ -57,10 +57,10 @@ public class DatabaseService {
         } catch (MongoException e) {
             e.printStackTrace();
         }
-        finally {
-            if (mongoClient != null) {
-                mongoClient.close();
-            }
+//        finally {
+//            if (mongoClient != null) {
+//                mongoClient.close();
+//            }
         }
     }
-}
+
