@@ -7,6 +7,8 @@ import java.util.UUID;
 
 public class QuizQuestion {
     private UUID id;
+    private int unit;
+    private int subgroup;
     private int page;
     private int maxPage;
     private String title;
@@ -87,10 +89,28 @@ public class QuizQuestion {
         this.feedbackList = feedbackList;
     }
 
+    public int getUnit() {
+        return unit;
+    }
+
+    public void setUnit(int unit) {
+        this.unit = unit;
+    }
+
+    public int getSubgroup() {
+        return subgroup;
+    }
+
+    public void setSubgroup(int subgroup) {
+        this.subgroup = subgroup;
+    }
+
     @Override
     public String toString() {
         return "QuizQuestion{" +
                 "id=" + id +
+                ", unit=" + unit +
+                ", subgroup=" + subgroup +
                 ", page=" + page +
                 ", maxPage=" + maxPage +
                 ", title='" + title + '\'' +
