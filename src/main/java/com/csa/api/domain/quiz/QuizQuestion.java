@@ -7,8 +7,8 @@ import java.util.UUID;
 
 public class QuizQuestion {
     private UUID id;
-    private int unit;
-    private int subgroup;
+    private String unit;
+    private String subgroup;
     private int page;
     private int maxPage;
     private String title;
@@ -89,19 +89,19 @@ public class QuizQuestion {
         this.feedbackList = feedbackList;
     }
 
-    public int getUnit() {
+    public String getUnit() {
         return unit;
     }
 
-    public void setUnit(int unit) {
+    public void setUnit(String unit) {
         this.unit = unit;
     }
 
-    public int getSubgroup() {
+    public String getSubgroup() {
         return subgroup;
     }
 
-    public void setSubgroup(int subgroup) {
+    public void setSubgroup(String subgroup) {
         this.subgroup = subgroup;
     }
 

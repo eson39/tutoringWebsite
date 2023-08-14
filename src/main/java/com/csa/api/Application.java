@@ -16,6 +16,7 @@ import org.bson.conversions.Bson;
 
 import java.util.*;
 
+import static com.mongodb.client.model.Filters.and;
 import static com.mongodb.client.model.Filters.eq;
 
 
@@ -119,6 +120,93 @@ public class Application {
 
             ctx.json(response);
         });
+
+        app.get("/question/unit/{unit}/subgroup/{subgroup}", ctx -> {
+            String unit = ctx.pathParam("unit");
+            String subgroup = ctx.pathParam("subgroup");
+
+            String response = "";
+            ObjectMapper objectMapper = new ObjectMapper();
+            String errorMsg = "";
+
+            try {
+                MongoCollection<Document> collection = databaseService.getDb().getCollection("posts");
+                if (collection != null) {
+                    Bson projectionFields = Projections.fields(Projections.excludeId());
+                    List<QuizQuestion> documentsList = new ArrayList<>();
+                    MongoCursor<Document> iterator = collection.find(and(eq("unit", unit), eq("subgroup", subgroup)))
+                            .projection(projectionFields)
+                            .iterator();
+                    System.out.println(iterator.hasNext());
+                    while(iterator.hasNext()) {
+                        Document currentDocument = iterator.next();
+                        String currentJson = currentDocument.toJson();
+
+                        System.out.println("Current JSON: " + currentJson); // Debugging
+
+                        QuizQuestion quizQuestion = objectMapper.readValue(currentJson, QuizQuestion.class);
+                        documentsList.add(quizQuestion);
+                    }
+
+                    response = objectMapper.writeValueAsString(documentsList);
+                } else {
+                    errorMsg = "No data found";
+                    response = "{ \"error\" : \"" + errorMsg + "\"}";
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                errorMsg = "Exception occurred: " + e.getMessage();
+                response = "{ \"error\" : \"" + errorMsg + "\"}";
+            }
+
+            System.out.println("Response: " + response); // Debugging
+            ctx.json(response);
+        });
+
+        app.get("/question/unit/{unit}", ctx -> {
+            String unit = ctx.pathParam("unit");
+            System.out.println("Unit extracted from URL: " + unit); // Debugging
+
+            String response = "";
+            ObjectMapper objectMapper = new ObjectMapper();
+            String errorMsg = "";
+
+            try {
+                MongoCollection<Document> collection = databaseService.getDb().getCollection("posts");
+                if (collection != null) {
+                    Bson projectionFields = Projections.fields(Projections.excludeId());
+                    List<QuizQuestion> documentsList = new ArrayList<>();
+                    MongoCursor<Document> iterator = collection.find(eq("unit", unit))
+                            .projection(projectionFields)
+                            .iterator();
+                    System.out.println(iterator.hasNext());
+                    while(iterator.hasNext()) {
+                        Document currentDocument = iterator.next();
+                        String currentJson = currentDocument.toJson();
+
+                        System.out.println("Current JSON: " + currentJson); // Debugging
+
+                        QuizQuestion quizQuestion = objectMapper.readValue(currentJson, QuizQuestion.class);
+                        documentsList.add(quizQuestion);
+                    }
+
+                    response = objectMapper.writeValueAsString(documentsList);
+                } else {
+                    errorMsg = "No data found";
+                    response = "{ \"error\" : \"" + errorMsg + "\"}";
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                errorMsg = "Exception occurred: " + e.getMessage();
+                response = "{ \"error\" : \"" + errorMsg + "\"}";
+            }
+
+            System.out.println("Response: " + response); // Debugging
+            ctx.json(response);
+        });
+
+
+
 
         app.post("/question", ctx -> {
             String msg = "Successful";
