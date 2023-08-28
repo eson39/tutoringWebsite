@@ -1,6 +1,7 @@
 package com.csa.api;
 
 import com.csa.api.domain.quiz.QuizQuestion;
+import com.csa.api.domain.quiz.Unit;
 import com.csa.api.repository.DatabaseService;
 import com.csa.api.util.JsonUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -15,6 +16,8 @@ import org.bson.conversions.Bson;
 
 
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import static com.mongodb.client.model.Filters.and;
 import static com.mongodb.client.model.Filters.eq;
@@ -22,6 +25,71 @@ import static com.mongodb.client.model.Filters.eq;
 
 
 public class Application {
+    public static String queryItems(DatabaseService databaseService, org.bson.conversions.Bson filter) {
+        String errorMsg = "No data found";
+        String response = "{ \"error\" : \"" + errorMsg + "\"}";
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            MongoCollection<Document> collection = databaseService.getDb().getCollection("posts");
+            if (collection != null) {
+                Bson projectionFields = Projections.fields(Projections.excludeId());
+                List<QuizQuestion> documentsList = new ArrayList<>();
+                MongoCursor<Document> iterator = null;
+                if (filter != null) {
+                    iterator = collection
+                            .find(filter)
+                            .projection(projectionFields)
+                            .iterator();
+                } else {
+                    iterator = collection
+                            .find()
+                            .projection(projectionFields)
+                            .iterator();
+                }
+
+                if (iterator != null) {
+                    while(iterator.hasNext()) {
+                        Document currentDocument = iterator.next();
+                        String currentJson = currentDocument.toJson();
+
+                        //System.out.println("Current JSON: " + currentJson); // Debugging
+
+                        QuizQuestion quizQuestion = objectMapper.readValue(currentJson, QuizQuestion.class);
+                        documentsList.add(quizQuestion);
+                    }
+                    response = objectMapper.writeValueAsString(documentsList);
+                }
+            }
+        } catch (Exception e) {
+            //e.printStackTrace();
+            errorMsg = "Exception occurred: " + e.getMessage();
+            response = "{ \"error\" : \"" + errorMsg + "\"}";
+        }
+        return response;
+    }
+
+    public static List<Unit> convertToUnitSubgroupJson(List<Document> allDocuments) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        List<QuizQuestion> documentsList = new ArrayList<>();
+        for(Document currentDocument: allDocuments) {
+            String currentJson = currentDocument.toJson();
+            try {
+                QuizQuestion quizQuestion = objectMapper.readValue(currentJson, QuizQuestion.class);
+                documentsList.add(quizQuestion);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        List<Unit> unitList = new ArrayList<>();
+        for (QuizQuestion currentQuestion: documentsList) {
+            Unit unit = new Unit();
+            unit.setUnit(currentQuestion.getUnit());
+            unit.setSubgroup(currentQuestion.getSubgroup());
+            unitList.add(unit);
+        }
+        return unitList;
+    }
+
 
     public static void main(String[] args) {
         DatabaseService databaseService = new DatabaseService();
@@ -38,45 +106,7 @@ public class Application {
 
 
         app.get("/question", ctx -> {
-            String response = "";
-            ObjectMapper objectMapper = new ObjectMapper();
-            String errorMsg = "";
-            try {
-                MongoCollection<Document> collection = databaseService.getDb().getCollection("posts");
-                if (collection != null) {
-//                    Document doc = posts.find().first();
-//                    response = doc.toJson();
-
-                    Bson projectionFields = Projections.fields(Projections.excludeId());
-
-                    List<QuizQuestion> documentsList = new ArrayList<>();
-                    MongoCursor<Document> iterator = collection
-                            .find()
-                            .projection(projectionFields)
-                            .iterator();
-
-                    while (iterator.hasNext()) {
-                        Document currentDocument = iterator.next();
-                        String currentJson = currentDocument.toJson();
-
-                        QuizQuestion quizQuestion = objectMapper.readValue(currentJson, QuizQuestion.class);
-                        documentsList.add(quizQuestion);
-                    }
-
-                    response = objectMapper.writeValueAsString(documentsList);
-                }
-                else {
-                    errorMsg = "data not found";
-                    response = "{ \"error\" : \"" + errorMsg  + "\"}";
-                }
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-
-                errorMsg = "Exception occurred";
-                response = "{ \"error\" : \"" + errorMsg  + "\"}";
-            }
-
+            String response = queryItems(databaseService, null);
             ctx.json(response);
         });
 
@@ -100,7 +130,6 @@ public class Application {
                 if (document != null) {
                     String json = document.toJson();
 
-                    // any rules that needs to run we want to conver to java objects from json String
                     ObjectMapper objectMapper = new ObjectMapper();
                     QuizQuestion quizQuestion = objectMapper.readValue(json, QuizQuestion.class);
 
@@ -121,90 +150,48 @@ public class Application {
             ctx.json(response);
         });
 
+        app.get("/question/list/unique", ctx -> {
+            List<Document> allDocuments = new ArrayList<>();
+            MongoCollection<Document> collection = databaseService.getDb().getCollection("posts");
+            Bson projectionFields = Projections.fields(Projections.excludeId());
+
+            if (collection != null) {
+                MongoCursor<Document> iterator = collection
+                        .find()
+                        .projection(projectionFields)
+                        .iterator();
+
+                Set<String> uniqueCombinations = new HashSet<>();
+
+                while (iterator.hasNext()) {
+                    Document currentDocument = iterator.next();
+                    String unit = currentDocument.getString("unit");
+                    String subgroup = currentDocument.getString("subgroup");
+                    String combination = unit + " " + subgroup;
+
+                    if (!uniqueCombinations.contains(combination)) {
+                        uniqueCombinations.add(combination);
+                        allDocuments.add(currentDocument);
+                    }
+                }
+                List<Unit> unitList = convertToUnitSubgroupJson(allDocuments);
+                ctx.json(unitList);
+            }
+        });
+
         app.get("/question/unit/{unit}/subgroup/{subgroup}", ctx -> {
+            System.out.println("testing");
             String unit = ctx.pathParam("unit");
             String subgroup = ctx.pathParam("subgroup");
-
-            String response = "";
-            ObjectMapper objectMapper = new ObjectMapper();
-            String errorMsg = "";
-
-            try {
-                MongoCollection<Document> collection = databaseService.getDb().getCollection("posts");
-                if (collection != null) {
-                    Bson projectionFields = Projections.fields(Projections.excludeId());
-                    List<QuizQuestion> documentsList = new ArrayList<>();
-                    MongoCursor<Document> iterator = collection.find(and(eq("unit", unit), eq("subgroup", subgroup)))
-                            .projection(projectionFields)
-                            .iterator();
-                    System.out.println(iterator.hasNext());
-                    while(iterator.hasNext()) {
-                        Document currentDocument = iterator.next();
-                        String currentJson = currentDocument.toJson();
-
-                        System.out.println("Current JSON: " + currentJson); // Debugging
-
-                        QuizQuestion quizQuestion = objectMapper.readValue(currentJson, QuizQuestion.class);
-                        documentsList.add(quizQuestion);
-                    }
-
-                    response = objectMapper.writeValueAsString(documentsList);
-                } else {
-                    errorMsg = "No data found";
-                    response = "{ \"error\" : \"" + errorMsg + "\"}";
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                errorMsg = "Exception occurred: " + e.getMessage();
-                response = "{ \"error\" : \"" + errorMsg + "\"}";
-            }
-
-            System.out.println("Response: " + response); // Debugging
+            String response = queryItems(databaseService, and(eq("unit", unit), eq("subgroup", subgroup)));
             ctx.json(response);
         });
 
         app.get("/question/unit/{unit}", ctx -> {
             String unit = ctx.pathParam("unit");
-            System.out.println("Unit extracted from URL: " + unit); // Debugging
-
-            String response = "";
-            ObjectMapper objectMapper = new ObjectMapper();
-            String errorMsg = "";
-
-            try {
-                MongoCollection<Document> collection = databaseService.getDb().getCollection("posts");
-                if (collection != null) {
-                    Bson projectionFields = Projections.fields(Projections.excludeId());
-                    List<QuizQuestion> documentsList = new ArrayList<>();
-                    MongoCursor<Document> iterator = collection.find(eq("unit", unit))
-                            .projection(projectionFields)
-                            .iterator();
-                    System.out.println(iterator.hasNext());
-                    while(iterator.hasNext()) {
-                        Document currentDocument = iterator.next();
-                        String currentJson = currentDocument.toJson();
-
-                        System.out.println("Current JSON: " + currentJson); // Debugging
-
-                        QuizQuestion quizQuestion = objectMapper.readValue(currentJson, QuizQuestion.class);
-                        documentsList.add(quizQuestion);
-                    }
-
-                    response = objectMapper.writeValueAsString(documentsList);
-                } else {
-                    errorMsg = "No data found";
-                    response = "{ \"error\" : \"" + errorMsg + "\"}";
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                errorMsg = "Exception occurred: " + e.getMessage();
-                response = "{ \"error\" : \"" + errorMsg + "\"}";
-            }
-
-            System.out.println("Response: " + response); // Debugging
+            String response = queryItems(databaseService, eq("unit", unit));
             ctx.json(response);
         });
-
 
 
 
@@ -308,4 +295,5 @@ public class Application {
         });
 
     }
+
 }
