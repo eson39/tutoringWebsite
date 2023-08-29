@@ -1,5 +1,6 @@
 package com.csa.api;
 
+
 import com.csa.api.domain.quiz.QuizQuestion;
 import com.csa.api.domain.quiz.Unit;
 import com.csa.api.repository.DatabaseService;
@@ -15,12 +16,18 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 
 
+
+
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+
 import static com.mongodb.client.model.Filters.and;
 import static com.mongodb.client.model.Filters.eq;
+
+
+
 
 
 
@@ -47,12 +54,15 @@ public class Application {
                             .iterator();
                 }
 
+
                 if (iterator != null) {
                     while(iterator.hasNext()) {
                         Document currentDocument = iterator.next();
                         String currentJson = currentDocument.toJson();
 
+
                         //System.out.println("Current JSON: " + currentJson); // Debugging
+
 
                         QuizQuestion quizQuestion = objectMapper.readValue(currentJson, QuizQuestion.class);
                         documentsList.add(quizQuestion);
@@ -68,7 +78,8 @@ public class Application {
         return response;
     }
 
-    public static List<Unit> convertToUnitSubgroupJson(List<Document> allDocuments) {
+
+    public static List<Unit> convertToUnitQuizJson(List<Document> allDocuments) {
         ObjectMapper objectMapper = new ObjectMapper();
         List<QuizQuestion> documentsList = new ArrayList<>();
         for(Document currentDocument: allDocuments) {
@@ -84,15 +95,18 @@ public class Application {
         for (QuizQuestion currentQuestion: documentsList) {
             Unit unit = new Unit();
             unit.setUnit(currentQuestion.getUnit());
-            unit.setSubgroup(currentQuestion.getSubgroup());
+            unit.setQuiz(currentQuestion.getQuiz());
             unitList.add(unit);
         }
         return unitList;
     }
 
 
+
+
     public static void main(String[] args) {
         DatabaseService databaseService = new DatabaseService();
+
 
         var app = Javalin.create(config -> {
                     config.plugins.enableCors(cors -> {
@@ -105,33 +119,44 @@ public class Application {
                 .start(8080);
 
 
+
+
         app.get("/question", ctx -> {
             String response = queryItems(databaseService, null);
             ctx.json(response);
         });
 
 
+
+
         app.get("/question/{id}", ctx -> {
             String id = ctx.pathParam("id");
 
+
             String value = ctx.queryParam("age");
             //System.out.println("-------- value = " + value);
+
 
             String response = "";
             try {
                 MongoCollection<Document> collection = databaseService.getDb().getCollection("posts");
 
+
                 Bson projectionFields = Projections.fields(Projections.excludeId());
+
 
                 Document document = collection.find(eq("id", id))
                         .projection(projectionFields)
                         .first();
 
+
                 if (document != null) {
                     String json = document.toJson();
 
+
                     ObjectMapper objectMapper = new ObjectMapper();
                     QuizQuestion quizQuestion = objectMapper.readValue(json, QuizQuestion.class);
+
 
                     response = objectMapper.writeValueAsString(quizQuestion);
                 }
@@ -143,17 +168,21 @@ public class Application {
             catch (Exception e) {
                 e.printStackTrace();
 
+
                 String errorMsg = "Exception occurred";
                 response = "{ \"error\" : \"" + errorMsg  + "\"}";
             }
 
+
             ctx.json(response);
         });
+
 
         app.get("/question/list/unique", ctx -> {
             List<Document> allDocuments = new ArrayList<>();
             MongoCollection<Document> collection = databaseService.getDb().getCollection("posts");
             Bson projectionFields = Projections.fields(Projections.excludeId());
+
 
             if (collection != null) {
                 MongoCursor<Document> iterator = collection
@@ -161,31 +190,36 @@ public class Application {
                         .projection(projectionFields)
                         .iterator();
 
+
                 Set<String> uniqueCombinations = new HashSet<>();
+
 
                 while (iterator.hasNext()) {
                     Document currentDocument = iterator.next();
                     String unit = currentDocument.getString("unit");
-                    String subgroup = currentDocument.getString("subgroup");
-                    String combination = unit + " " + subgroup;
+                    String quiz = currentDocument.getString("quiz");
+                    String combination = unit + " " + quiz;
+
 
                     if (!uniqueCombinations.contains(combination)) {
                         uniqueCombinations.add(combination);
                         allDocuments.add(currentDocument);
                     }
                 }
-                List<Unit> unitList = convertToUnitSubgroupJson(allDocuments);
+                List<Unit> unitList = convertToUnitQuizJson(allDocuments);
                 ctx.json(unitList);
             }
         });
 
-        app.get("/question/unit/{unit}/subgroup/{subgroup}", ctx -> {
+
+        app.get("/question/unit/{unit}/quiz/{quiz}", ctx -> {
             System.out.println("testing");
             String unit = ctx.pathParam("unit");
-            String subgroup = ctx.pathParam("subgroup");
-            String response = queryItems(databaseService, and(eq("unit", unit), eq("subgroup", subgroup)));
+            String quiz = ctx.pathParam("quiz");
+            String response = queryItems(databaseService, and(eq("unit", unit), eq("quiz", quiz)));
             ctx.json(response);
         });
+
 
         app.get("/question/unit/{unit}", ctx -> {
             String unit = ctx.pathParam("unit");
@@ -195,9 +229,13 @@ public class Application {
 
 
 
+
+
+
         app.post("/question", ctx -> {
             String msg = "Successful";
             String response = "{ \"status\" : \"" + msg + "\"}";
+
 
             try {
                 String bodyJson = ctx.body();
@@ -205,10 +243,13 @@ public class Application {
                 QuizQuestion quizQuestion = objectMapper.readValue(bodyJson, QuizQuestion.class);
                 quizQuestion.setId(UUID.randomUUID());
 
+
                 System.out.println("quizQuestion = " + quizQuestion.toString());
+
 
                 String finalJson = JsonUtil.convertToJson(quizQuestion);
                 final Document document = Document.parse(finalJson);
+
 
                 MongoCollection<Document> posts = databaseService.getDb().getCollection("posts");
                 if (posts == null) {
@@ -223,20 +264,27 @@ public class Application {
                 ctx.status(400);
             }
 
+
             ctx.json(response);
         });
 
 
+
+
         app.put("/question", ctx -> {
+
 
             try {
                 String json = ctx.body();
                 //System.out.println("json = " + json);
 
+
                 ObjectMapper objectMapper = new ObjectMapper();
                 QuizQuestion quizQuestion = objectMapper.readValue(json, QuizQuestion.class);
 
+
                 String finalJson = JsonUtil.convertToJson(quizQuestion);
+
 
                 final Document document = Document.parse(finalJson);
                 MongoCollection<Document> collection = databaseService.getDb().getCollection("posts");
@@ -249,20 +297,26 @@ public class Application {
             catch (Exception e) {
                 e.printStackTrace();
 
+
                 String errorMsg = "Exception occurred";
                 String response = "{ \"error\" : \"" + errorMsg  + "\"}";
                 ctx.json(response);
             }
 
 
+
+
             String msg = "Successful";
             String response = "{ \"status\" : \"" + msg  + "\"}";
             ctx.json(response);
 
+
         });
+
 
         app.delete("/question/{id}", ctx -> {
             String id = ctx.pathParam("id");
+
 
             String response = "";
             try {
@@ -284,10 +338,12 @@ public class Application {
             catch (Exception e) {
                 e.printStackTrace();
 
+
                 String errorMsg = "Exception occurred";
                 response = "{ \"error\" : \"" + errorMsg  + "\"}";
                 ctx.json(response);
             }
+
 
             String msg = "Deleted";
             response = "{ \"status\" : \"" + msg  + "\"}";

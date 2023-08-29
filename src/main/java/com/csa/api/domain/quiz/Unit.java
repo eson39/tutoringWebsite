@@ -1,22 +1,27 @@
 package com.csa.api.domain.quiz;
 
+
 public class Unit {
     private String unit;
-    private String subgroup;
+    private String quiz;
+
 
     public String getUnit() {
         return unit;
     }
 
+
     public void setUnit(String unit) {
         this.unit = unit;
     }
 
-    public String getSubgroup() {
-        return subgroup;
+
+    public String getQuiz() {
+        return quiz;
     }
 
-    public void setSubgroup(String subgroup) {
-        this.subgroup = subgroup;
+
+    public void setQuiz(String quiz) {
+        this.quiz = quiz;
     }
 }
