@@ -1,4 +1,4 @@
 .idea/
 build/
 .gradle/
-/Users/ericson/git/my-project/csa-web/src/main/java/com/csa/api/repository/DatabaseService.java
+/src/main/java/com/csa/api/repository/DatabaseService.java
