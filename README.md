@@ -1,26 +1,23 @@
-# csa-web
+# Tutoring Website
 
+A full-stack web application for AP Computer Science A and my first web dev project in high school. The platform enables users to register, log in, schedule tutoring sessions, and manage availability based on their role (Student, Tutor, or Admin). The backend is built using Java Servlets, with JSP for dynamic content, and MySQL for persistent data storage.
 
-git config --global user.email "eric.son04272006@gmail.com"
-git config --global user.name "Eric Son"
+## 🔧 Features
 
-# to check the current status
-git status
+- **User Authentication**
+  - Secure login and registration
+  - Session management using Java `HttpSession`
 
-# stage files to be commited
-git add .
+- **Dynamic Web Pages**
+  - Uses JSP for rendering content based on user roles
+  - JavaScript and CSS used for interactivity and styling
 
-# commit the files to your local git
-git commit -m 'some description'
+## 🏗️ Tech Stack
 
-# push your commits to github.com
-git push
+| Layer       | Technology               |
+|-------------|---------------------------|
+| Frontend    | HTML, CSS, JavaScript     |
+| Backend     | Java Servlets, JSP        |
+| Database    | MongoDB                   |
+| Server      | Render                    |
 
-# get latest change into your local from github.com
-git pull
-
-# run this to compile your project using gradle
-./gradlew clean build jar
-
-# to run the execution jar
-java -jar build/libs/csa-web-1.0.0.jar
